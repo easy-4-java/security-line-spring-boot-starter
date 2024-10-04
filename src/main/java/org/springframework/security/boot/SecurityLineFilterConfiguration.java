@@ -1,9 +1,8 @@
 package org.springframework.security.boot;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.biz.web.servlet.i18n.LocaleContextFilter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -13,6 +12,7 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -26,16 +26,16 @@ import org.springframework.security.boot.utils.WebSecurityUtils;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Configuration
 @AutoConfigureBefore(name = { 
@@ -48,8 +48,7 @@ public class SecurityLineFilterConfiguration {
 	
 	@Configuration
 	@EnableConfigurationProperties({ SecurityLineProperties.class, SecurityLineAuthcProperties.class, SecurityBizProperties.class })
-	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
-	static class LineWebSecurityConfigurerAdapter extends WebSecurityBizConfigurerAdapter {
+	static class LineWebSecurityCustomizerAdapter extends WebSecurityCustomizerAdapter {
 
 	    private final SecurityLineAuthcProperties authcProperties;
 	    
@@ -62,7 +61,7 @@ public class SecurityLineFilterConfiguration {
 		private final LocaleContextFilter localeContextFilter;
 		private final OkHttpClient okhttp3Client;
 		
-		public LineWebSecurityConfigurerAdapter(
+		public LineWebSecurityCustomizerAdapter(
    				
 				SecurityBizProperties bizProperties,
 				SecuritySessionMgtProperties sessionMgtProperties,
@@ -130,30 +129,32 @@ public class SecurityLineFilterConfiguration {
 			
 	        return authenticationFilter;
 	    }
-		
-		@Override
-		public void configure(HttpSecurity http) throws Exception {
-			
-			http.antMatcher(authcProperties.getPathPattern())
-				.exceptionHandling()
-	        	.authenticationEntryPoint(authenticationEntryPoint)
-	        	.and()
-	        	.httpBasic()
-	        	.disable()
-	        	.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
-   	        	.addFilterBefore(authenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class); 
-   	    	
-   	    	super.configure(http, authcProperties.getCors());
-   	    	super.configure(http, authcProperties.getCsrf());
-   	    	super.configure(http, authcProperties.getHeaders());
-	    	super.configure(http);
+
+		@Bean
+		@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
+		public SecurityFilterChain lineSecurityFilterChain(HttpSecurity http) throws Exception {
+			http = http.antMatcher(authcProperties.getPathPattern())
+					.exceptionHandling()
+					.authenticationEntryPoint(authenticationEntryPoint)
+					.and()
+					.httpBasic()
+					.disable()
+					.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
+					.addFilterBefore(authenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
+
+			super.configure(http, authcProperties.getCors());
+			super.configure(http, authcProperties.getCsrf());
+			super.configure(http, authcProperties.getHeaders());
+			super.configure(http);
+
+			return http.build();
 		}
-		
+
 		@Override
-	    public void configure(WebSecurity web) throws Exception {
-	    	super.configure(web);
-	    }
-		
+		public void customize(WebSecurity web) {
+			super.customize(web);
+		}
+
 	}
 	
 }
