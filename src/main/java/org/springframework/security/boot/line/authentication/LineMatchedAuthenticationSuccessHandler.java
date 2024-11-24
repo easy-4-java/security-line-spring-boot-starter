@@ -1,6 +1,6 @@
 package org.springframework.security.boot.line.authentication;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,7 +58,7 @@ public class LineMatchedAuthenticationSuccessHandler implements MatchedAuthentic
 		} else {
 			profilePayload = principal.toPayload();
 		}
-		JSONObject.writeJSONString(response.getOutputStream(), AuthResponse.success(message, profilePayload));
+		JSON.writeTo(response.getOutputStream(), AuthResponse.success(message, profilePayload));
     }
 
 	public JwtPayloadRepository getPayloadRepository() {
