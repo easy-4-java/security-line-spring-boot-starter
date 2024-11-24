@@ -25,8 +25,11 @@ import org.springframework.security.boot.line.authentication.LineAccessTokenAuth
 import org.springframework.security.boot.utils.WebSecurityUtils;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.CompositeAccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.RememberMeServices;
@@ -51,7 +54,8 @@ public class SecurityLineFilterConfiguration {
 	static class LineWebSecurityCustomizerAdapter extends WebSecurityCustomizerAdapter {
 
 	    private final SecurityLineAuthcProperties authcProperties;
-	    
+
+		private final AccessDeniedHandler accessDeniedHandler;
 	    private final AuthenticationEntryPoint authenticationEntryPoint;
 	    private final AuthenticationSuccessHandler authenticationSuccessHandler;
 	    private final AuthenticationFailureHandler authenticationFailureHandler;
@@ -66,7 +70,8 @@ public class SecurityLineFilterConfiguration {
 				SecurityBizProperties bizProperties,
 				SecuritySessionMgtProperties sessionMgtProperties,
 				SecurityLineAuthcProperties authcProperties,
-				
+
+				ObjectProvider<AccessDeniedHandler> accessDeniedHandlerProvider,
 				ObjectProvider<LocaleContextFilter> localeContextProvider,
 				ObjectProvider<AuthenticationProvider> authenticationProvider,
    				ObjectProvider<AuthenticationListener> authenticationListenerProvider,
@@ -83,7 +88,8 @@ public class SecurityLineFilterConfiguration {
 			super(bizProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()));
    			
 			this.authcProperties = authcProperties;
-			
+
+			this.accessDeniedHandler = new CompositeAccessDeniedHandler(accessDeniedHandlerProvider.stream().collect(Collectors.toList()));
 			this.localeContextFilter = localeContextProvider.getIfAvailable();
    			List<AuthenticationListener> authenticationListeners = authenticationListenerProvider.stream().collect(Collectors.toList());
    			this.authenticationEntryPoint = WebSecurityUtils.authenticationEntryPoint(authcProperties, sessionMgtProperties, authenticationEntryPointProvider.stream().collect(Collectors.toList()));
@@ -133,13 +139,14 @@ public class SecurityLineFilterConfiguration {
 		@Bean
 		@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
 		public SecurityFilterChain lineSecurityFilterChain(HttpSecurity http) throws Exception {
-			http = http.antMatcher(authcProperties.getPathPattern())
-					.exceptionHandling()
-					.authenticationEntryPoint(authenticationEntryPoint)
-					.and()
-					.httpBasic()
-					.disable()
-					.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
+			http.securityMatcher(authcProperties.getPathPattern())
+					.exceptionHandling(configurer -> {
+						configurer.authenticationEntryPoint(authenticationEntryPoint)
+								.accessDeniedHandler(accessDeniedHandler)
+								.accessDeniedPage(authcProperties.getAccessDeniedUrl());
+					});
+			http.httpBasic(AbstractHttpConfigurer::disable);
+			http.addFilterBefore(localeContextFilter, UsernamePasswordAuthenticationFilter.class)
 					.addFilterBefore(authenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
 
 			super.configure(http, authcProperties.getCors());

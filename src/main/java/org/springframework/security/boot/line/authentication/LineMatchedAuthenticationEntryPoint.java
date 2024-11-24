@@ -15,13 +15,10 @@
  */
 package org.springframework.security.boot.line.authentication;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.alibaba.fastjson.JSONObject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,7 +33,8 @@ import org.springframework.security.boot.line.exception.LineAccessTokenNotFoundE
 import org.springframework.security.boot.utils.SubjectUtils;
 import org.springframework.security.core.AuthenticationException;
 
-import com.alibaba.fastjson.JSONObject;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class LineMatchedAuthenticationEntryPoint implements MatchedAuthenticationEntryPoint {
 
