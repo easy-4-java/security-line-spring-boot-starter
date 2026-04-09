@@ -15,7 +15,6 @@
  */
 package org.springframework.security.boot.line.authentication;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,7 +51,7 @@ public class LineAccessTokenAuthenticationProcessingFilter extends Authenticatio
 	 * HTTP Authorization Param, equal to <code>accessToken</code>
 	 */
 	public static final String AUTHORIZATION_PARAM = "accessToken";
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper;
 	private String authorizationParamName = AUTHORIZATION_PARAM;
     private OkHttpClient okhttp3Client;
 	
@@ -94,9 +93,8 @@ public class LineAccessTokenAuthenticationProcessingFilter extends Authenticatio
             if (response1.isSuccessful()) {
                 String content = response1.body().string();
                 log.debug("Request Success: code : {}, body : {} , use time : {} ", response1.code(), content, System.currentTimeMillis() - start);
-                profile = JSONObject.parseObject(content, LineAccessTokenProfile.class);
+                profile =  objectMapper.readValue(content, LineAccessTokenProfile.class);
             }
-            
         } catch (Exception e) {
             log.error("Request Failure : {}, use time : {} ", e.getMessage(), System.currentTimeMillis() - start);
             throw new LineAccessTokenIncorrectException(" Line accessToken Invalid ");
