@@ -25,7 +25,7 @@ import com.alibaba.fastjson.JSONObject;
 
 /**
  * Line AccessToken 认证 (authentication)成功回调器：讲认证信息写回前端
- * @author 		： <a href="https://github.com/hiwepy">hiwepy</a>
+ * @author 		： <a href="https://github.com/easy-4-java">hiwepy</a>
  */
 public class LineMatchedAuthenticationSuccessHandler implements MatchedAuthenticationSuccessHandler {
    
