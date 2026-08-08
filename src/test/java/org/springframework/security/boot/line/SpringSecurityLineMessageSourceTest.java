@@ -15,26 +15,24 @@
  */
 package org.springframework.security.boot.line;
 
-import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.context.support.ResourceBundleMessageSource;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * TODO
+ * Unit tests for {{ @link SpringSecurityLineMessageSource }}.
+ *
  * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 1.0.0
  */
-public class SpringSecurityLineMessageSource extends ResourceBundleMessageSource {
-	
-	// ~ Constructors
-	// ===================================================================================================
+@DisplayName("SpringSecurityLineMessageSource Tests")
+class SpringSecurityLineMessageSourceTest {
 
-	public SpringSecurityLineMessageSource() {
-		setBasename("org.springframework.security.boot.line.messages");
-	}
-
-	// ~ Methods
-	// ========================================================================================================
-
-	public static MessageSourceAccessor getAccessor() {
-		return new MessageSourceAccessor(new SpringSecurityLineMessageSource());
-	}
+    @Test
+    @DisplayName("Instance can be created via constructor")
+    void testInstantiation() {
+        SpringSecurityLineMessageSource instance = new SpringSecurityLineMessageSource();
+        assertThat(instance).isNotNull();
+    }
 }
