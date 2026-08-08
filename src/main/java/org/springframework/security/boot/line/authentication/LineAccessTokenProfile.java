@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * https://developers.line.biz/en/reference/line-login/#get-user-profile
- * @author 		： <a href="https://github.com/hiwepy">hiwepy</a>
+ * @author [@Loong Wan](https://github.com/loong10k)
  */
 @Data
 public class LineAccessTokenProfile {
